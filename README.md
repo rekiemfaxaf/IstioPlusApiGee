@@ -64,7 +64,7 @@ db     ClusterIP   10.28.15.16   <none>        5432/TCP   137m
 web    ClusterIP   10.28.0.76    <none>        8081/TCP   137m
 words  ClusterIP   10.28.5.85    <none>        8080/TCP   137m
 ```
-
+## Deploy Istio components
 - Next you need to create an `Istio GateWay`  and `VirtualServices` to map the web app with the correct gateway with the following file [GateWayAndVirtualSVC](istio/gateway-words.yaml):
 ```
 $ kubectl apply -f istio/gateway-words.yaml
@@ -126,3 +126,77 @@ web         web-virtualservice     [web-gateway]   [*]       162m
 - Requests percentage
 - And you'll se something like:
 ![Kiali](img/kiali.png)
+
+# Apigee
+In order to enable Apigee with Istio, we need to replace Mixer from Istio with a Powered Mixer from Apigee
+You'll need an [Apigee](https://apigee.com/) account, with the free version it's ok
+- First we need to create a apigee isto adapter, please refer to [apigee docs](https://docs.apigee.com/api-platform/istio-adapter/install-istio_1_1#provision_components_on_edge_public_cloud)
+- Once you get your handler like this:
+```
+# Istio handler configuration for Apigee gRPC adapter for Mixer
+apiVersion: config.istio.io/v1alpha2
+kind: handler
+metadata:
+  name: apigee-handler
+  namespace: istio-system
+spec:
+  adapter: apigee
+  connection:
+    address: apigee-adapter:5000
+  params:
+    apigee_base: https://istioservices.apigee.net/edgemicro
+    customer_base: https://myorg-env.apigee.net/istio-auth
+    org_name: myorg
+    env_name: myenv
+    key: 06a40b65005d03ea24c0d53de69ab795590b0c332526e97fed549471bdea00b9
+    secret: 93550179f344150c6474956994e0943b3e93a3c90c64035f378dc05c98389633 
+```
+- You must create the `Adapter and Configurations` for Apigee on your cluster 
+```
+$ kubectl apply -f apigee
+deployment.extensions/apigee-adapter created
+service/apigee-adapter created
+instance.config.istio.io/apigee-authorization created
+instance.config.istio.io/apigee-authorization-web created
+instance.config.istio.io/apigee-analytics created
+template.config.istio.io/apigee-authorization created
+template.config.istio.io/apigee-analytics created
+adapter.config.istio.io/apigee created
+handler.config.istio.io/apigee-handler created
+rule.config.istio.io/apigee-rule created
+rule.config.istio.io/apigee-rule-web created
+```
+- You will be able to see an API Proxy on your [Apigee Edge page](https://apigee.com/edge)
+![Apigee proxy](img/apigee-proxy.png)
+- You will not able to see Words web app, the web was secured by apigee
+
+![blocked by proxy](img/wordwebblocked.png)
+- Register your Api Product, with the following configurations
+
+![wordwebblocked.png](img/wordwebblocked.png)
+
+- Create a new developer
+
+![newdeveloper.png](img/newdeveloper.png)
+- And now create a new app
+
+![newdeveloper.png](img/newapp.png)
+
+- With App credential Key, set as header on your call to web app, you'll be able to connect again to web app
+
+![webcall.png](img/callwithheader.png)
+
+- If you want to disableb apigee security on any namespace, you need to modify [apigee rule](apigee/rule.yaml), delete autorization-web line on instances
+```
+apiVersion: config.istio.io/v1alpha2
+kind: rule
+metadata:
+  name: apigee-rule-web
+  namespace: istio-system
+spec:
+  match: context.reporter.kind == "inbound" && destination.namespace == "web"
+  actions:
+  - handler: apigee-handler
+    instances:
+    - apigee-analytics
+```
