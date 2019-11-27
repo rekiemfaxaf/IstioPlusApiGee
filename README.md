@@ -1,4 +1,4 @@
-# Istio Kubern  
+# Istio + GKE + Apigee
 
 Wordsmith is the demo project shown at DockerCon EU 2017, where Docker announced that support for Kubernetes was coming to the Docker platform.
 
@@ -19,21 +19,20 @@ The demo app runs across three containers:
 The Requirements for this example are:
 
 ```
-Have a GKE Cluster with Istio Enabled (At least 3 nodes n1-standard-2, mTLS Strict)
+GKE Cluster with Istio Enabled (At least 3 nodes n1-standard-2, mTLS Strict)
 
-Have KubeControl (kubectl) on your Machine
+KubeControl (kubectl) on your Machine
 
-Have Istio (istioctl) on your Machine
+Istio (istioctl) on your Machine
 
-Have Docker on your machine
+Docker on your machine
 ```
 
-> Or you can pull pre-built images from Docker Hub Described on the - [Deploy](k8s-deploy/words-smith-deploy.yaml)  or You can tag and push the images on your project privat gcr.io (this apply for these Docker files: - [db](db/Dockerfile),[words](words/Dockerfile),[words-v2](words-v2/Dockerfile),[web](web/Dockerfile))
+> You can use pre-built images from Docker Hub Described on [Deploy File](k8s-deploy/words-smith-deploy.yaml) or you can tag and push the images on your project private gcr.io (this apply for these Docker files: - [db](db/Dockerfile),[words](words/Dockerfile),[words-v2](words-v2/Dockerfile),[web](web/Dockerfile))
 ```
 docker build -t gcr.io/your-gcp-project/words-v2:latest .
 docker push gcr.io/your-gcp-project/words-v2:latest
 ```
-
 
 ## Deploy `Words` as K8S Stack
 From root folder of project:
