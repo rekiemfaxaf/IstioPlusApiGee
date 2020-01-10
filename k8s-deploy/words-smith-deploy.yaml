@@ -82,7 +82,7 @@ spec:
     spec:
       containers:
       - name: words
-        image: gcr.io/sandbox-latam-xp/words-v2:latest
+        image: gcr.io/your-project/words-v2:latest
         ports:
         - containerPort: 8080
           name: api
@@ -117,7 +117,7 @@ spec:
     spec:
       containers:
       - name: web
-        image: gcr.io/sandbox-latam-xp/front:latest
+        image: gcr.io/your-project/front:latest
         ports:
         - containerPort: 80
           name: words-web
